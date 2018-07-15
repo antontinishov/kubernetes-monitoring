@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: prometheus
+  name: prometheus
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus
+      containers:
+      - image: quay.io/prometheus/prometheus:v2.3.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus
+        command:
+        - "/bin/prometheus"
+        args:
+        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--storage.tsdb.path=/prometheus"
+        - "--storage.tsdb.retention=60d"
+        ports:
+        - containerPort: 9090
+          protocol: TCP
+        volumeMounts:
+        - name: volume-disk
+          mountPath: /prometheus
+        - name: config-volume
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 500m
+            memory: 2500Mi
+      volumes:
+      - name: volume-disk
+        hostPath:
+          path: /docker/prometheus
+      - name: config-volume
+        configMap:
+          name: prometheus-config
+      nodeSelector:
+        env: monitoring
+      restartPolicy: Always

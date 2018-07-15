@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: default
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - image: grafana/grafana:5.2.1
+        name: grafana
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        env:
+          - name: "GF_AUTH_BASIC_ENABLED"
+            value: "true"
+          - name: "GF_AUTH_ANONYMOUS_ENABLED"
+            value: "false"
+          - name: "GF_INSTALL_PLUGINS"
+            value: "grafana-kubernetes-app,grafana-worldmap-panel"
+          - name: "GF_SERVER_ROOT_URL"
+            value: "YOUR_DOMAIN.COM"
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 3000
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: grafana-persistent-storage
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: grafana-persistent-storage
+        hostPath:
+          path: /docker/grafana
+      nodeSelector:
+        env: monitoring
+      restartPolicy: Always

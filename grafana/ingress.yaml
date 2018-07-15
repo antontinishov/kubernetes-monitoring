@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/add-base-url: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+spec:
+  tls:
+  - hosts:
+    - YOUR_DOMAIN.COM
+    secretName: ssl-secret
+  rules:
+  - host: YOUR_DOMAIN.COM
+    http:
+      paths:
+      - path: /grafana/
+        backend:
+          serviceName: grafana
+          servicePort: 3000
